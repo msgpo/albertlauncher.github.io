@@ -1,0 +1,471 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <title>Albert - Python extension</title>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="Albert RSS" href="/feed.xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+  <link rel="stylesheet" href="https://albertlauncher.github.io/css/main.css">
+</head>
+
+<body>
+    <main class="wrapper">
+      <nav class="site-header">
+    <div class="container">
+        <a class="title" href="https://albertlauncher.github.io">
+            <img class="icon" src="https://albertlauncher.github.io/img/albert.svg" alt="Albert" title="Albert">
+            <span class="title">Albert</span>
+        </a>
+        <nav class="navigation float-right">
+            <ul>
+    <li class="">
+        <a href="/">Home</a>
+    </li>
+    <li class="current">
+        <a href="/docs/">Docs</a>
+    </li>
+    <li class="">
+        <a href="/news/">News</a>
+    </li>
+    <li class="">
+        <a href="/help/">Help</a>
+    </li>
+    <li>
+        <a href="https://github.com/albertlauncher/albert.git"><span class="hide-on-mobiles">View on </span>GitHub</a>
+    </li>
+</ul>
+
+        </nav>
+    </div>
+</nav>
+
+      <section class="container docs">
+    <article>
+        <div class="row">
+            <div class="column column-20">
+              <aside id="doc_nav">
+  
+    <h5>User guide</h5>
+    <ul>
+
+  
+  
+  <li class=""><a href="/docs/installing/">Installing Albert</a></li>
+
+  
+  
+  <li class=""><a href="/docs/using/">Using Albert</a></li>
+
+  
+  
+  <li class=""><a href="/docs/extending/">Extending Albert</a></li>
+
+  
+  
+  <li class=""><a href="/docs/extensions/">Extensions</a></li>
+
+</ul>
+
+  
+    <h5>Meta</h5>
+    <ul>
+
+  
+  
+  <li class=""><a href="/docs/contributing/">Contributing</a></li>
+
+  
+  
+  <li class=""><a href="/docs/donation/">Donating</a></li>
+
+  
+  
+  <li class=""><a href="/docs/changelog/">Changelog</a></li>
+
+</ul>
+
+  
+</aside>
+
+            </div>
+            <div class="column column-80">
+                <div class="float-right">
+                    <a href="https://github.com/albertlauncher/documentation/edit/master/src/_docs/extensions/python.md">Improve this page</a>
+                </div>
+                <h1>Python extension</h1>
+                <p>The Python extension makes the application extendable by embedding Python modules. Since the name of the native extension providing this functionality is <em>Python extension</em> and a Python module in this context is called <em>Python extension</em> too, this article refers to the Python extensions by using the term <em>Python modules</em>.</p>
+
+<p>In the settings of the Python extension you can find a list of installed python extensions. This list with checkboxes works similar to the list of native extensions. Check the box of a Python module to automatically load it when the Python extension gets initialized. The icon represents the loading status. Dash means undloaded, the green checkmark stands for a successfully loaded module and a red cross indicates an error while loading the extension. In this case you can hover over the item to check its tooltip. There you find any errormessages. You can also run Albert from terminal to check for error output.</p>
+
+<h2 id="the-extension-interface-specification-v0">The extension interface specification v0</h2>
+
+<p>How the python extension interacts with python modules is defined in the versioned interface specifiation. The Python extension also defines an embedded module <code class="language-plaintext highlighter-rouge">albertv0</code> (<code class="language-plaintext highlighter-rouge">albert</code> in future) which allows the Pyhton modules to interact with the core. The extension interface and the built-in albert module are <em>not</em> final. They are prototypes and intended to be improved on user feedback.</p>
+
+<!-- 
+See https://github.com/jasonbellamy/jekyll-mermaid
+Prototype here https://mermaid-js.github.io/mermaid-live-editor/
+-->
+<pre><code class="language-mermaid">sequenceDiagram  
+participant C as Core
+participant E as PyExtension
+participant M as PyModule
+C -&gt;&gt; E: Extension::initialize()
+E -&gt;&gt; M: initialize()
+C -&gt;&gt; E: Extension::handleQuery(Query)
+E -&gt;&gt; M: handleQuery(Query)
+M -&gt;&gt; E: albert.*()  
+C -&gt;&gt; E: Extension::finalize()
+E -&gt;&gt; M: finalize()
+</code></pre>
+
+<h3 id="the-python-module-interface">The Python module interface</h3>
+
+<p>This is how your python module has to look to be applicable as extension:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">handleQuery(Query)</code></td>
+      <td><strong>Mandatory function</strong>. This is the crucial part of a Python module. When the user types a query, this function is called with a query object representing the current query execution. This function should return a list of Item objects. See the Item class section below.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">initialize()</code></td>
+      <td>Optional function. This function is called when the extension is loaded.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">finalize()</code></td>
+      <td>Optional function. This function is called when the extension is unloaded.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__doc__</code></td>
+      <td>The docstring of the module is used as description of the extension. This string will be displayed to the user.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__iid__</code></td>
+      <td><strong>Mandatory variable</strong> (string). This variable has to hold the interface version the extension implements.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__prettyname__</code></td>
+      <td>Optional variable (string). This variable should hold the pretty name of the extension. This string will be displayed to the user.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__version__</code></td>
+      <td>Optional variable (string). This variable should hold the version of the extension. This string will be displayed to the user. The versioning scheme should follow the <a href="http://semver.org">semantic versioning</a>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__trigger__</code></td>
+      <td>Optional variable (string). If this extension should be run exclusively, this variable has to hold the trigger that causes the extension to be executed.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__author__</code></td>
+      <td>Optional variable (string). This variable should hold the name of the author of the extension.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">__dependencies__</code></td>
+      <td>Optional variable (list of strings). This string should contain any dependencies the extension needs to be used.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="the-embedded-albertv0-module">The embedded <code class="language-plaintext highlighter-rouge">albertv0</code> module</h3>
+
+<p>The built-in albert module exposes several functions and classes for use with Albert.</p>
+
+<h4 id="functions">Functions</h4>
+
+<h4 id="classes">Classes</h4>
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">debug(text)</code></td>
+      <td>Log a debug message. Note that this is effectively a NOP in release builds.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">info(text)</code></td>
+      <td>Log an info message.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">warning(text)</code></td>
+      <td>Log a warning message.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">critical(text)</code></td>
+      <td>Log a critical message.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">iconLookup(iconName)</code></td>
+      <td>Perform xdg icon lookup and return a path. Empty if nothing found.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">cacheLocation()</code></td>
+      <td>Returns the writable cache location of the app. (E.g. $HOME/.cache/albert/ on Linux)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">configLocation()</code></td>
+      <td>Returns the writable config location of the app. (E.g. $HOME/.config/albert/ on Linux)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">dataLocation()</code></td>
+      <td>Returns the writable data location of the app. (E.g. $HOME/.local/share/albert/ on Linux)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5 id="the-query-class">The <code class="language-plaintext highlighter-rouge">Query</code> class</h5>
+
+<p>The query class represents a query execution. It holds the necessary information to handle a Query. It is passed to the handleQuery function. It holds the following read-only properties.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">string</code></td>
+      <td>This is the actual query string without the trigger. If the query is not triggered this string equals rawstring.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">rawString</code></td>
+      <td>This is the full query string including the trigger. If the query is not triggered this string equals string.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">trigger</code></td>
+      <td>This is the trigger that has been used to start this extension.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">isTriggered</code></td>
+      <td>Indicates that this query has been triggered.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">isValid</code></td>
+      <td>This flag indicates if the query is valid. A query is valid untill the query manager cancels it. You should regularly check this flag and abort the query handling if the flag is <code class="language-plaintext highlighter-rouge">False</code> to release threads in the threadpool for the next query.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5 id="the-item-class">The <code class="language-plaintext highlighter-rouge">Item</code> class</h5>
+
+<p>The base class for all items is <code class="language-plaintext highlighter-rouge">ItemBase</code>. This is a wrapper for the internal Item interface. You should not need this unless you need the <code class="language-plaintext highlighter-rouge">Urgency</code> enum. The <code class="language-plaintext highlighter-rouge">Urgency</code> enum is defined in the <code class="language-plaintext highlighter-rouge">ItemBase</code> namespace and has the following enum members: <code class="language-plaintext highlighter-rouge">Alert</code>, <code class="language-plaintext highlighter-rouge">Notification</code> and <code class="language-plaintext highlighter-rouge">Normal</code>. The <code class="language-plaintext highlighter-rouge">Item</code> class represents a result item. Objects of this class are intended to be returned by the handleQuery function. The signature of the constructor is as follows:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Item</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">""</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="s">":python_module"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s">""</span><span class="p">,</span> <span class="n">subtext</span><span class="o">=</span><span class="s">""</span><span class="p">,</span>
+     <span class="n">completion</span><span class="o">=</span><span class="s">""</span><span class="p">,</span> <span class="n">urgency</span><span class="o">=</span><span class="n">Urgency</span><span class="p">.</span><span class="n">Normal</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="p">[])</span>
+</code></pre></div></div>
+
+<p>Note that the default icon path is <code class="language-plaintext highlighter-rouge">:python_module</code> which is an embedded resource icon depicting a Python script and the urgency defaults to normal.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">id</code></td>
+      <td>The identifier string of the item. It is used for ranking algorithms and should not be empty.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">icon</code></td>
+      <td>The path of the icon displayed in the item.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">text</code></td>
+      <td>The primary text of the item.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">subtext</code></td>
+      <td>The secondary text of the item. This text should have informative character.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">completion</code></td>
+      <td>The completion string of the item. This string will be used to replace the input line when the user hits the Tab key on an item. Note that the semantics may vary depending in the context. Often evaluate semantics are more appropriate.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">urgency</code></td>
+      <td>The urgency of the item. Note that the Urgency enum is defined in the ItemBase class. See the Urgency enum.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">addAction(Action)</code></td>
+      <td>Add an action to the item.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5 id="action-classes">Action classes</h5>
+
+<p>The base class for all actions is <code class="language-plaintext highlighter-rouge">ActionBase</code>. This is a wrapper for the internal Action interface. You should not need it ( If you think you do I‘d be interested why. Please contact me in this case.). There is also a set of standard actions subclassing <code class="language-plaintext highlighter-rouge">ActionBase</code> which should cover virtually every usecases.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Attribute</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ClipAction</code></td>
+      <td>This class copies the given text to the clipboard on activation.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">UrlAction</code></td>
+      <td>This class opens the given URL with the systems default URL handler for the scheme of the URL on activation.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">ProcAction</code></td>
+      <td>This class executes the given commandline as a detached process on activation. Optionally the working directory of the process can be set.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">TermAction</code></td>
+      <td>This class executes the given commandline in the terminal set in the preferences. Optionally the working directory of the process can be set. The namespace of the <code class="language-plaintext highlighter-rouge">TermAction</code> also contains an enum <code class="language-plaintext highlighter-rouge">CloseBehavior</code> with the enum members <code class="language-plaintext highlighter-rouge">CloseOnSucces</code>, <code class="language-plaintext highlighter-rouge">CloseOnExit</code> and <code class="language-plaintext highlighter-rouge">DoNotClose</code>, which can be used to specify the desired behavior on command termination.</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">FuncAction</code></td>
+      <td>This class is a general purpose action. On activation the callable is executed.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Some action examples
+</span><span class="n">ClipAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">'This action descripton'</span><span class="p">,</span> 
+           <span class="n">clipboardText</span><span class="o">=</span><span class="s">'This goes to the cb'</span><span class="p">)</span>
+           
+<span class="n">UrlAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">'This simply opens google'</span><span class="p">,</span>
+          <span class="n">url</span><span class="o">=</span><span class="s">'https://www.google.com/'</span><span class="p">)</span>
+          
+<span class="n">ProcAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">'This action runs sth.'</span><span class="p">,</span>
+           <span class="n">commandline</span><span class="o">=</span><span class="p">[</span><span class="s">'jupyter'</span><span class="p">,</span> <span class="s">'notebook'</span><span class="p">],</span>
+           <span class="n">cwd</span><span class="o">=</span><span class="s">'notebooks/nb1'</span><span class="p">)</span>
+           
+<span class="n">TermAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">'This action runs sth in terminal.'</span><span class="p">,</span>
+           <span class="n">commandline</span><span class="o">=</span><span class="p">[</span><span class="s">'jupyter'</span><span class="p">,</span> <span class="s">'notebook'</span><span class="p">],</span>
+           <span class="n">cwd</span><span class="o">=</span><span class="s">'~/notebooks/nb1'</span><span class="p">,</span>
+           <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+           <span class="n">behavior</span><span class="o">=</span><span class="n">CloseBehavior</span><span class="p">.</span><span class="n">DoNotClose</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">do_sth</span><span class="p">():</span>
+     <span class="n">albert</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Hello on stdout!"</span><span class="p">)</span>
+
+<span class="n">FuncAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">"Prints Hello on stdout!"</span><span class="p">,</span> <span class="nb">callable</span><span class="o">=</span><span class="n">do_sth</span><span class="p">)</span>
+
+<span class="c1"># An item example
+</span><span class="n">Item</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">'google'</span><span class="p">,</span>
+     <span class="n">text</span><span class="o">=</span><span class="s">'Google the query'</span><span class="p">,</span>
+     <span class="n">subtext</span><span class="o">=</span><span class="s">'Handy shortcut to google the query'</span><span class="p">,</span>
+     <span class="n">actions</span><span class="o">=</span><span class="p">[</span>
+          <span class="n">UrlAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">'This simply opens a google search'</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="s">'https://www.google.com/search?q=%s'</span> <span class="o">%</span> <span class="n">query</span><span class="p">.</span><span class="n">string</span><span class="p">)</span>
+          <span class="n">ClipAction</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s">'Nifty for dudes assuming you are Google'</span><span class="p">,</span>
+                     <span class="n">clipboardText</span><span class="o">=</span><span class="s">'Dude, https://www.google.com/search?q=%s'</span><span class="p">)</span>
+     <span class="p">])</span>
+</code></pre></div></div>
+
+<h2 id="deployment">Deployment</h2>
+
+<p>The extension checks its data directories for a directory called <code class="language-plaintext highlighter-rouge">modules</code>. The name of a data directory is the id of the extension. I the case of the Python extension this is <code class="language-plaintext highlighter-rouge">org.albert.extension.python</code>. The data directories reside in the data directories of the application defined by <a href="http://doc.qt.io/qt-5/qstandardpaths.html#StandardLocation-enum">Qt</a>. Hence the external extensions would be looked up in the following directories (in this order):</p>
+
+<ul>
+  <li>~/.local/share/albert/org.albert.extension.python/modules</li>
+  <li>/usr/local/share/albert/org.albert.extension.python/modules</li>
+  <li>/usr/share/albert/org.albert.extension.python/modules</li>
+</ul>
+
+<p>Ids are guaranteed to be unique. This means that if several of those paths contain a plugins with identical ids, the first plugin found will be used.</p>
+
+<h2 id="getting-started-on-linux">Getting started (on Linux)</h2>
+
+<p>This example should get you started developing a python module to extend the functionality of Albert. For more extension examples, see the <a href="https://github.com/albertlauncher/python">albert python extensions repository</a>.</p>
+
+<ol>
+  <li>Duplicate the folder <code class="language-plaintext highlighter-rouge">~/.local/share/albert/org.albert.extension.python/modules/api-test</code></li>
+  <li>Rename the module but stay consistent with the conventions.</li>
+  <li>Open Albert settings and navigate to Extensions &gt; Python</li>
+  <li>If your module is not listed, reload the Python extension or restart Albert</li>
+  <li>Enable your module (Check the checkbox) next to your extension</li>
+  <li>Create your extension. The Python extension reloads modules on file changes.</li>
+</ol>
+
+<p>Before you code check the Pull Requests. Maybe somebody had your idea already. Finally dont hesitate to share your extension!</p>
+
+<h2 id="known-issues">Known issues</h2>
+
+<p>Python exceptions thrown at the core application are not handled well and may introduce a lot of weird errors. Ensure that you catch <em>all</em> exceptions in the Python code.</p>
+
+<p>The Python interpreter shuts down when the Python extension is unloaded. After this, enabling the extension will restart the interpreter. Some modules cannot be re-initialized safely and may cause segfaults after the interpreter has been restarted (numpy!). The issue is that Python itself cannot completely unload extension modules and there are several caveats with regard to interpreter restarting. In short, not all memory may be freed, either due to Python reference cycles or user-created global data. All the details can be found in the CPython documentation.</p>
+
+            </div>
+        </div>
+    </article>
+    </div>
+</section>
+
+      
+      <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+
+  var topEdge
+  document.onscroll = function () {
+    if (topEdge === undefined)
+      topEdge = document.getElementById("doc_nav").getBoundingClientRect().top+window.pageYOffset-20;
+
+    if ( window.pageYOffset > topEdge)
+      document.getElementById("doc_nav").classList.add("stuck");
+    else
+      document.getElementById("doc_nav").classList.remove("stuck");
+  };
+
+
+
+</script>
+
+    </main>
+</body>
+</html>

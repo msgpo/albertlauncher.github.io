@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+  <title>Albert - Help</title>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="Albert RSS" href="/feed.xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+  <link rel="stylesheet" href="https://albertlauncher.github.io/css/main.css">
+</head>
+
+<body>
+    <main class="wrapper">
+      <nav class="site-header">
+    <div class="container">
+        <a class="title" href="https://albertlauncher.github.io">
+            <img class="icon" src="https://albertlauncher.github.io/img/albert.svg" alt="Albert" title="Albert">
+            <span class="title">Albert</span>
+        </a>
+        <nav class="navigation float-right">
+            <ul>
+    <li class="">
+        <a href="/">Home</a>
+    </li>
+    <li class="">
+        <a href="/docs/">Docs</a>
+    </li>
+    <li class="">
+        <a href="/news/">News</a>
+    </li>
+    <li class="current">
+        <a href="/help/">Help</a>
+    </li>
+    <li>
+        <a href="https://github.com/albertlauncher/albert.git"><span class="hide-on-mobiles">View on </span>GitHub</a>
+    </li>
+</ul>
+
+        </nav>
+    </div>
+</nav>
+
+      <section class="container">
+    <article>
+        <h1>Help</h1>
+        <p>Problems with Albert? Try these.</p>
+
+<h5 id="documentation"><a href="/docs/">Documentation</a></h5>
+
+<p>The documentation should cover everything you are concerned about. Users find a user guide, while devs can learn how to extend the app with plugins, scripts or executables.</p>
+
+<h5 id="troubleshooting-and-support">Troubleshooting and support</h5>
+
+<p>If you have questions or problems using albert ask Google. Solutions are spread over <a href="https://github.com/albertlauncher/albert/issues">GitHub</a>, Blogs, Reddit, <a href="https://superuser.com/questions/tagged/albert">superuser.com</a>, etc. If you did not find the answer for your question, post it on superuser.com and tag it with <a href="https://superuser.com/questions/tagged/albert"><code class="language-plaintext highlighter-rouge">#albert</code></a>. To get attention post the link in the chats.</p>
+
+<h5 id="chats">Chats</h5>
+
+<p>These chats are for discussion around albert. Note that <strong>these chats are no support chats</strong>. Unless your problem is interesting or new you will probably get no answer. The chats are bridged using <a href="https://github.com/42wim/matterbridge">MatterBridge</a> so it does not matter which chat you join.</p>
+
+<ul>
+  <li><a href="https://telegram.me/albert_launcher_community">Telegram</a></li>
+  <li><a href="https://discord.gg/enGMWUG">Discord</a></li>
+  <li><a href="irc://irc.freenode.net/albertlauncher">IRC</a> / <a href="http://webchat.freenode.net?channels=%23albertlauncher">(Web Client)</a></li>
+</ul>
+
+<h5 id="github-repository"><a href="https://github.com/albertlauncher/albert.git">Github repository</a></h5>
+
+<p>If you wonder why Albert does this and that check out the source code to see how things work under the hood.</p>
+
+    </article>
+</section>
+
+      
+      <script>
+  var anchorForId = function (id) {
+    var anchor = document.createElement("a");
+    anchor.className = "header-link";
+    anchor.href      = "#" + id;
+    anchor.innerHTML = "<i class=\"fa fa-link\"></i>";
+    anchor.title = "Permalink";
+    return anchor;
+  };
+
+  var linkifyAnchors = function (level, containingElement) {
+    var headers = containingElement.getElementsByTagName("h" + level);
+    for (var h = 0; h < headers.length; h++) {
+      var header = headers[h];
+
+      if (typeof header.id !== "undefined" && header.id !== "") {
+        header.appendChild(anchorForId(header.id));
+      }
+    }
+  };
+
+  document.onreadystatechange = function () {
+    if (this.readyState === "complete") {
+      var contentBlock = document.getElementsByClassName("docs")[0] || document.getElementsByClassName("news")[0];
+      if (!contentBlock) {
+        return;
+      }
+      for (var level = 1; level <= 6; level++) {
+        linkifyAnchors(level, contentBlock);
+      }
+    }
+  };
+
+  var topEdge
+  document.onscroll = function () {
+    if (topEdge === undefined)
+      topEdge = document.getElementById("doc_nav").getBoundingClientRect().top+window.pageYOffset-20;
+
+    if ( window.pageYOffset > topEdge)
+      document.getElementById("doc_nav").classList.add("stuck");
+    else
+      document.getElementById("doc_nav").classList.remove("stuck");
+  };
+
+
+
+</script>
+
+    </main>
+</body>
+</html>
